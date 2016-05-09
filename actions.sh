@@ -16,7 +16,7 @@ function initialize() {
          check_if_everything_is_alright
       ;;
       *)
-      render_menu;
+      # render_menu;
       exit 1;
     esac
   fi
@@ -24,8 +24,8 @@ function initialize() {
 
 function check_if_everything_is_alright() {
   #Checa se os pacotes necessários para tradução estão instalados
-  are_the_necessary_packages_installed
-  do_you_have_a_github_account
+  are_the_necessary_packages_installed;
+  do_you_have_a_github_account;
 
   everything_is_ok=1
 }
@@ -54,25 +54,42 @@ function are_the_necessary_packages_installed() {
 }
 
 function do_you_have_a_github_account() {
-  dialog --stdout --title "Github"  --yesno "Você possui conta no github?" 5 50
+  dialog --stdout \
+    --title "Github" \
+    --yesno "Você possui conta no github?" \
+    5 50
+
   have_the_account=$?
 
   if [ $have_the_account -eq 1 ]; then
     echo "O processo exige uma conta no github! Crie uma em: https://github.com/join"
+    exit 0;
   else
-    echo 'teste'
+    have_you_forked_the_bridge;
   fi
+}
 
+function have_you_forked_the_bridge() {
+  github_user=$(dialog --stdout \
+    --title "Qual seu nome de usuário no github?" \
+    --inputbox "Usuário:" \
+    8 40)
 
-  exit $have_the_account;
-  # github_account=$(dialog --title "Create Directory" --inputbox "Enter the directory name:" 8 40)
+  status_code=$(curl -I -s -L https://github.com/$github_user/traducao | head -n 1 | awk {'print $2'})
+
+  if [ "$status_code" -eq 404 ]; then
+    echo 'Aparentemente você não fez o fork do repositório necessário. Entre na URL abaixo e faça o fork'
+    echo 'https://github.com/phpdocbrbridge/traducao/fork'
+  fi
 }
 
 
 function render_menu(){
-  option=$( dialog --stdout --title 'Lets translate' --menu 'Selecione uma opção.' 0 0 0 \
-    criar_estrutura 'Criar estrutura inicial' \
-  )
+  dialog --stdout \
+    --title 'Lets translate' \
+    --menu 'Selecione uma opção.' 0 0 0 \
+    criar_estrutura 'Criar estrutura inicial'
+
 
   case $option in
     criar_estrutura)
