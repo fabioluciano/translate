@@ -8,6 +8,7 @@ parameter="$1"
 function initialize() {
   everything_is_ok=0
   check_if_everything_is_alright;
+  which_account_type_youll_use;
 
   if [ $everything_is_ok -eq 1 ]; then
 
@@ -25,9 +26,35 @@ function initialize() {
 function check_if_everything_is_alright() {
   #Checa se os pacotes necessários para tradução estão instalados
   are_the_necessary_packages_installed;
-  do_you_have_a_github_account;
 
   everything_is_ok=1
+}
+
+function which_account_type_youll_use() {
+  option=$(dialog --stdout \
+    --title 'Qual tipo de conta você usará?' \
+    --menu 'Selecione uma opção.' 0 0 0 \
+    svn_oficial 'Usar o SVN oficial! Já possuo uma conta.' \
+    github 'Não possuo conta. Vou usar a ponte!')
+
+  case $option in
+    svn_oficial)
+      use_official_vcs_account;
+    ;;
+    github)
+      use_bridge
+    ;;
+  esac
+}
+
+function use_official_vcs_account() {
+  echo Copiando arquivos para ~/php-manual
+  svn co https://svn.php.net/repository/phpdoc/modules/doc-pt_BR ~/php-manual
+  cd ~/php-manual
+}
+
+function use_bridge() {
+    do_you_have_a_github_account;
 }
 
 function are_the_necessary_packages_installed() {
